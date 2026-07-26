@@ -74,6 +74,24 @@
   }
 }
 
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-line-value, #E4E6EA);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted-value, #6B7280);
+}
+
 @keyframes gemmacode-blink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.2; }

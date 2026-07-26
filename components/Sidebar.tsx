@@ -1,8 +1,11 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useChat } from "@/lib/chat-store";
-import { Delete02Icon, PanelLeftCloseIcon, PanelLeftOpenIcon, CodeIcon } from "@/lib/icons";
+import { getSession, signOut } from "@/lib/auth";
+import { Delete02Icon, PanelLeftCloseIcon, PanelLeftOpenIcon, CodeIcon, Logout01Icon } from "@/lib/icons";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -10,7 +13,35 @@ interface SidebarProps {
 }
 
 export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
-  const { state, selectConversation, deleteConv, newChat } = useChat();
+  const { state, selectConversation, deleteConv } = useChat();
+  const router = useRouter();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const session = getSession();
+  const email = session?.email ?? "";
+  const initials = email
+    .split("@")[0]
+    .slice(0, 2)
+    .toUpperCase();
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    if (menuOpen) {
+      document.addEventListener("mousedown", handler);
+    }
+    return () => document.removeEventListener("mousedown", handler);
+  }, [menuOpen]);
+
+  const handleSignOut = () => {
+    signOut();
+    setMenuOpen(false);
+    router.push("/sign-in");
+  };
 
   if (collapsed) {
     return (
@@ -86,13 +117,30 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
         ))}
       </div>
 
-      <div className="p-3 border-t border-line">
+      <div className="relative p-3 border-t border-line" ref={menuRef}>
         <button
-          onClick={newChat}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-[6px] text-sm font-[500] leading-5 border border-line text-ink hover:bg-paper transition-colors duration-100"
+          onClick={() => setMenuOpen((v) => !v)}
+          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-[6px] text-sm text-ink hover:bg-paper transition-colors duration-100"
         >
-          New chat
+          <span className="flex items-center justify-center w-7 h-7 rounded-full bg-line text-xs font-[600] text-ink shrink-0">
+            {initials}
+          </span>
+          <span className="truncate text-muted text-[13px]" style={{ fontFamily: "var(--font-geist-sans)" }}>
+            {email}
+          </span>
         </button>
+
+        {menuOpen && (
+          <div className="absolute bottom-full left-3 right-3 mb-1 rounded-[6px] border border-line bg-surface shadow-[0_4px_16px_rgba(20,22,26,0.08)] overflow-hidden">
+            <button
+              onClick={handleSignOut}
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-ink hover:bg-paper transition-colors duration-100"
+            >
+              <HugeiconsIcon icon={Logout01Icon} size={16} className="text-muted" />
+              Sign out
+            </button>
+          </div>
+        )}
       </div>
     </aside>
   );

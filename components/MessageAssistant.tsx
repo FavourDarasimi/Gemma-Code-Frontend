@@ -36,9 +36,7 @@ export function MessageAssistant({ message, isStreaming }: MessageAssistantProps
   const parts = useMemo(() => parseContent(message.content), [message.content]);
 
   return (
-    <div className="flex gap-3">
-      <div className="w-[2px] shrink-0 bg-accent rounded-none" />
-      <div className="flex-1 min-w-0">
+    <div className="flex-1 min-w-0">
         <p
           className="text-xs font-[500] text-muted leading-4 tracking-[0.04em] uppercase mb-2"
           style={{ fontFamily: "var(--font-geist-mono)" }}
@@ -69,7 +67,6 @@ export function MessageAssistant({ message, isStreaming }: MessageAssistantProps
             </span>
           )}
         </div>
-      </div>
     </div>
   );
 }

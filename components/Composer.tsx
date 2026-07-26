@@ -14,13 +14,6 @@ export function Composer({ onSend, disabled }: ComposerProps) {
   const [value, setValue] = useState("");
   const [focused, setFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [isDesktop, setIsDesktop] = useState(true);
-
-  useEffect(() => {
-    const handler = () => setIsDesktop(window.innerWidth >= 1024);
-    window.addEventListener("resize", handler);
-    return () => window.removeEventListener("resize", handler);
-  }, []);
 
   const adjustHeight = useCallback(() => {
     const el = textareaRef.current;
@@ -59,7 +52,13 @@ export function Composer({ onSend, disabled }: ComposerProps) {
     : { borderColor: "var(--color-line)", boxShadow: "0 0 0 0 transparent" };
 
   return (
-    <div className="border-t border-line bg-surface pb-[env(safe-area-inset-bottom)]">
+    <div className="relative pb-[env(safe-area-inset-bottom)]">
+      <div
+        className="absolute inset-x-0 bottom-full h-8 pointer-events-none"
+        style={{
+          background: "linear-gradient(to bottom, transparent, var(--color-paper))",
+        }}
+      />
       <div className="max-w-[720px] mx-auto px-4 md:px-6 py-3">
         <div
           className="relative flex items-end rounded-[6px] border bg-surface transition-colors duration-100"
@@ -97,14 +96,6 @@ export function Composer({ onSend, disabled }: ComposerProps) {
             </motion.button>
           </div>
         </div>
-        {isDesktop && (
-          <p
-            className="text-[12px] leading-4 text-muted mt-2 text-center"
-            style={{ fontFamily: "var(--font-geist-mono)" }}
-          >
-            Enter to send · Shift+Enter for new line
-          </p>
-        )}
       </div>
     </div>
   );

@@ -10,6 +10,10 @@ import {
   PanelLeftCloseIcon,
   PanelLeftOpenIcon,
   CodeIcon,
+  ViewIcon,
+  ViewOffIcon,
+  Logout01Icon,
+  ArrowDown01Icon,
 } from "@hugeicons/core-free-icons";
 
 export {
@@ -24,4 +28,8 @@ export {
   PanelLeftCloseIcon,
   PanelLeftOpenIcon,
   CodeIcon,
+  ViewIcon,
+  ViewOffIcon,
+  Logout01Icon,
+  ArrowDown01Icon,
 };
