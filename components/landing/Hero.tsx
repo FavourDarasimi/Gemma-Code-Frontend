@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { CodeIcon } from "@/lib/icons";
 import { Button } from "@/components/ui/Button";
 import { Composer } from "@/components/Composer";
 import { MessageAssistant } from "@/components/MessageAssistant";
@@ -20,27 +22,31 @@ export function Hero() {
 
   return (
     <section className="pt-32 pb-20 md:pt-40 md:pb-28">
-      <div className="max-w-[1120px] mx-auto px-6 grid md:grid-cols-2 gap-12 md:gap-16 items-center">
+      <div className="max-w-[1500px] mx-auto px-6 text-center">
         <motion.div
           initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: prefersReducedMotion ? 0.001 : 0.2, ease: "easeOut" }}
         >
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-line text-xs font-[500] text-muted mb-6">
+            <HugeiconsIcon icon={CodeIcon} size={16} />
+            AI code assistant
+          </div>
+
           <h1
-            className="text-[32px] leading-[40px] md:text-[44px] md:leading-[52px] font-[600] text-ink mb-4"
-            style={{ fontFamily: "var(--font-geist-sans)" }}
+            className="text-[36px] leading-[44px] md:text-[52px] md:leading-[60px] font-bold text-ink mb-8 tracking-tight mx-auto max-w-[760px]"
+            style={{ fontFamily: "var(--font-display)" }}
           >
-            A code assistant that reads the whole file, not just the line
+            Describe what you want. Paste your error. Get working code.
           </h1>
           <p
-            className="text-lg leading-7 text-muted mb-8 max-w-md"
+            className="text-lg leading-7 text-muted mb-8 mx-auto max-w-[650px]"
             style={{ fontFamily: "var(--font-geist-sans)" }}
           >
-            Ask about a bug, paste a stack trace, or describe what you&apos;re building — get clear answers with real code.
-          </p>
-          <div className="flex items-center gap-3">
+            Build full features, fix bugs, explain errors, and generate production-ready code in seconds. Just tell the AI what you&apos;re trying to build or paste your stack trace.          </p>
+          <div className="flex items-center justify-center gap-3 mb-16">
             <Link href="/sign-up">
-              <Button variant="primary" className="px-6">
+              <Button variant="primary" size="lg">
                 Start free
               </Button>
             </Link>
@@ -58,18 +64,21 @@ export function Hero() {
             ease: "easeOut",
             delay: prefersReducedMotion ? 0 : 0.1,
           }}
-          className="min-w-0"
+          className="max-w-[700px] mx-auto"
         >
-          <div className="rounded-[6px] border border-line bg-surface overflow-hidden">
-            <div className="px-4 py-3 border-b border-line">
-              <p
-                className="text-xs font-[500] text-muted leading-4 tracking-[0.04em] uppercase"
-                style={{ fontFamily: "var(--font-geist-mono)" }}
-              >
-                gemmacode
-              </p>
+          <div className="rounded-[24px] border border-line bg-surface overflow-hidden">
+            <div className="relative flex items-center justify-center py-2 border-b border-line">
+              <div className="w-[100px] h-[5px] rounded-full bg-line" />
+              <div className="absolute left-4">
+                <p
+                  className="text-[11px] font-[500] text-muted leading-4 tracking-[0.04em] uppercase"
+                  style={{ fontFamily: "var(--font-geist-mono)" }}
+                >
+                  gemmacode
+                </p>
+              </div>
             </div>
-            <div className="p-4 space-y-4">
+            <div className="p-4 md:p-5 space-y-4 text-left">
               <MessageAssistant message={seededMessage} />
             </div>
             <div className="border-t border-line">

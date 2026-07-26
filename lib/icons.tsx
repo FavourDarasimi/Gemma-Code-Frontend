@@ -14,6 +14,15 @@ import {
   ViewOffIcon,
   Logout01Icon,
   ArrowDown01Icon,
+  Bug01Icon,
+  SearchCodeIcon,
+  FileSyncIcon,
+  TestTube01Icon,
+  Doc01Icon,
+  Pen01Icon,
+  AiBrain01Icon,
+  InputTextIcon,
+  CheckmarkCircle01Icon,
 } from "@hugeicons/core-free-icons";
 
 export {
@@ -32,4 +41,13 @@ export {
   ViewOffIcon,
   Logout01Icon,
   ArrowDown01Icon,
+  Bug01Icon,
+  SearchCodeIcon,
+  FileSyncIcon,
+  TestTube01Icon,
+  Doc01Icon,
+  Pen01Icon,
+  AiBrain01Icon,
+  InputTextIcon,
+  CheckmarkCircle01Icon,
 };

@@ -1,16 +1,27 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Blanka-Regular";
+  src: url("https://db.onlinewebfonts.com/t/8cdbb48678e4418f22a2f507c2b975bd.woff2") format("woff2"),
+       url("https://db.onlinewebfonts.com/t/8cdbb48678e4418f22a2f507c2b975bd.woff") format("woff"),
+       url("https://db.onlinewebfonts.com/t/8cdbb48678e4418f22a2f507c2b975bd.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  --color-ink: var(--color-ink-value, #14161A);
-  --color-paper: var(--color-paper-value, #F6F7F8);
-  --color-surface: var(--color-surface-value, #FFFFFF);
-  --color-line: var(--color-line-value, #E4E6EA);
-  --color-muted: var(--color-muted-value, #6B7280);
+  --color-ink: var(--color-ink-value, #1C1C1C);
+  --color-paper: var(--color-paper-value, #FFFFFF);
+  --color-surface: var(--color-surface-value, #F7F7F7);
+  --color-line: var(--color-line-value, #E5E5E5);
+  --color-muted: var(--color-muted-value, #8A8A8A);
   --color-accent: var(--color-accent-value, #315DFF);
   --color-accent-ink: var(--color-accent-ink-value, #1F3FBF);
   --color-danger: var(--color-danger-value, #C1432E);
+  --color-glass: var(--glass-bg, rgba(255,255,255,0.7));
 
   --color-code-bg: var(--color-code-bg-value, #EEF1F5);
   --color-code-text: var(--color-code-text-value, #14161A);
@@ -21,42 +32,47 @@
 
   --font-sans: var(--font-geist-sans), system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+  --font-display: var(--font-display), Georgia, serif;
 
   --radius-6: 6px;
 }
 
 :root {
-  --color-ink-value: #14161A;
-  --color-paper-value: #F6F7F8;
-  --color-surface-value: #FFFFFF;
-  --color-line-value: #E4E6EA;
-  --color-muted-value: #6B7280;
+  --color-ink-value: #1C1C1C;
+  --color-paper-value: #FFFFFF;
+  --color-surface-value: #F7F7F7;
+  --color-line-value: #E5E5E5;
+  --color-muted-value: #8A8A8A;
   --color-accent-value: #315DFF;
   --color-accent-ink-value: #1F3FBF;
   --color-danger-value: #C1432E;
   --color-code-bg-value: #EEF1F5;
-  --color-code-text-value: #14161A;
+  --color-code-text-value: #1C1C1C;
   --color-code-keyword-value: #315DFF;
   --color-code-string-value: #0F7A5A;
   --color-code-function-value: #8A5CF6;
   --color-code-comment-value: #8A8F98;
+  --glass-bg: rgba(255,255,255,0.7);
+  --dot-color: rgba(0,0,0,0.15);
 }
 
 .dark {
-  --color-ink-value: #E5E7EB;
-  --color-paper-value: #0F1115;
-  --color-surface-value: #1A1C22;
-  --color-line-value: #2A2D35;
-  --color-muted-value: #9CA3AF;
+  --color-ink-value: #E5E5E5;
+  --color-paper-value: #111111;
+  --color-surface-value: #1A1A1A;
+  --color-line-value: #2A2A2A;
+  --color-muted-value: #888888;
   --color-accent-value: #527AFF;
   --color-accent-ink-value: #6B8FFF;
   --color-danger-value: #E55C44;
-  --color-code-bg-value: #23262E;
-  --color-code-text-value: #E5E7EB;
+  --color-code-bg-value: #222222;
+  --color-code-text-value: #E5E5E5;
   --color-code-keyword-value: #6B8FFF;
   --color-code-string-value: #34D399;
   --color-code-function-value: #A78BFA;
   --color-code-comment-value: #6B7280;
+  --glass-bg: rgba(17,17,17,0.7);
+  --dot-color: rgba(255,255,255,0.08);
 }
 
 @layer base {
@@ -72,6 +88,16 @@
     @apply outline-2 outline-offset-2 outline-accent/40;
     outline-style: solid;
   }
+}
+
+.bg-dot-grid {
+  background-image: radial-gradient(circle, var(--color-line) 0.5px, transparent 0.5px);
+  background-size: 24px 24px;
+}
+
+.bg-dot-grid-subtle {
+  background-image: radial-gradient(circle, var(--color-line) 0.5px, transparent 0.5px);
+  background-size: 32px 32px;
 }
 
 ::-webkit-scrollbar {
@@ -97,8 +123,25 @@
   50% { opacity: 0.2; }
 }
 
+@keyframes marquee-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.marquee-track {
+  animation: marquee-scroll 40s linear infinite;
+  width: max-content;
+}
+
+.marquee-track:hover {
+  animation-play-state: paused;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .gemmacode-streaming-caret {
+    animation: none !important;
+  }
+  .marquee-track {
     animation: none !important;
   }
 }

@@ -32,7 +32,7 @@ export function CapabilityGrid() {
 
   return (
     <section className="py-24 md:py-32">
-      <div className="max-w-[1120px] mx-auto px-6">
+      <div className="max-w-[1500px] mx-auto px-6">
         <p
           className="text-xs font-[500] text-muted leading-4 tracking-[0.04em] uppercase mb-4"
           style={{ fontFamily: "var(--font-geist-mono)" }}

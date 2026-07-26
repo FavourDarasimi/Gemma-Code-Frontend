@@ -18,25 +18,20 @@ export function Nav() {
     return () => window.removeEventListener("scroll", handler);
   }, []);
 
-  const bgColor = scrolled
-    ? "rgba(255,255,255,1)"
-    : "rgba(246,247,248,0)";
-  const borderColor = scrolled
-    ? "rgba(228,230,234,1)"
-    : "rgba(228,230,234,0)";
-
   return (
     <>
       <motion.nav
         animate={{
-          backgroundColor: bgColor,
-          borderBottomColor: borderColor,
+          backgroundColor: "var(--glass-bg)",
+
         }}
         transition={{ duration: prefersReducedMotion ? 0.001 : 0.15, ease: "easeOut" }}
-        className="fixed top-0 left-0 right-0 z-30 h-16 flex items-center border-b"
-        style={{ borderBottomWidth: 1, borderBottomStyle: "solid" }}
+        className={`fixed border border-line max-w-[900px] mx-auto mt-3 px-3 rounded-full top-0 left-3 right-3 md:left-0 md:right-0 z-30 h-16 flex items-center -b transition-all duration-150 ${
+          scrolled ? "backdrop-blur-xl" : ""
+        }`}
+
       >
-        <div className="flex items-center justify-between w-full max-w-[1120px] mx-auto px-6">
+        <div className="flex items-center justify-between w-full  mx-auto px-6">
           <Link href="/" className="flex items-center gap-2.5 shrink-0">
             <div className="flex items-center justify-center w-7 h-7 rounded-[6px] bg-accent text-white">
               <HugeiconsIcon icon={CodeIcon} size={16} />

@@ -4,24 +4,31 @@ import { type ButtonHTMLAttributes, forwardRef } from "react";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "ghost";
+  size?: "sm" | "md" | "lg";
 }
 
+const sizes = {
+  sm: "px-3 py-1.5 text-xs leading-5",
+  md: "px-5 py-2.5 text-sm leading-5",
+  lg: "px-7 py-3 text-[15px] leading-5",
+};
+
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-[6px] text-sm font-[500] leading-5 transition-colors duration-100 cursor-pointer disabled:cursor-not-allowed";
+  "inline-flex items-center justify-center gap-2 rounded-[6px] font-[500] transition-all duration-150 cursor-pointer disabled:cursor-not-allowed select-none";
 
 const variants = {
   primary:
-    "bg-accent text-white hover:bg-accent-ink disabled:bg-line disabled:text-muted disabled:pointer-events-none",
+    "bg-accent text-white hover:bg-accent-ink active:scale-[0.97] disabled:bg-line disabled:text-muted disabled:active:scale-100 disabled:pointer-events-none",
   ghost:
-    "bg-transparent border border-line text-ink hover:bg-paper disabled:text-muted disabled:pointer-events-none",
+    "bg-transparent border border-line text-ink hover:bg-paper active:scale-[0.97] disabled:text-muted disabled:active:scale-100 disabled:pointer-events-none",
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ variant = "ghost", className = "", ...props }, ref) => {
+  ({ variant = "ghost", size = "md", className = "", ...props }, ref) => {
     return (
       <button
         ref={ref}
-        className={`${base} ${variants[variant]} ${className}`}
+        className={`${base} ${sizes[size]} ${variants[variant]} ${className}`}
         {...props}
       />
     );

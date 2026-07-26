@@ -30,12 +30,13 @@ export function ProofSection() {
 
   return (
     <section className="py-24 md:py-32">
-      <div className="max-w-[1120px] mx-auto px-6">
+      <div className="max-w-[1500px] mx-auto px-6">
         <motion.div
           initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: prefersReducedMotion ? 0.001 : 0.2, ease: "easeOut" }}
+          className="flex flex-col items-center text-center"
         >
           <p
             className="text-xs font-[500] text-muted leading-4 tracking-[0.04em] uppercase mb-4"
@@ -44,7 +45,7 @@ export function ProofSection() {
             Real example
           </p>
           <h2
-            className="text-2xl font-[600] leading-8 text-ink mb-4"
+            className="text-2xl font-[600] leading-8 text-ink mb-4 max-w-xl"
             style={{ fontFamily: "var(--font-geist-sans)" }}
           >
             Clearer code, one suggestion at a time
@@ -55,7 +56,7 @@ export function ProofSection() {
           >
             Ask GemmaCode to refactor nested conditionals, and it shows you the before and after — with syntax-highlighted code you can copy in one click.
           </p>
-          <div className="max-w-2xl">
+          <div className="max-w-2xl w-full">
             <CodeBlockHighlighted language="typescript" code={exampleCode} />
           </div>
         </motion.div>
