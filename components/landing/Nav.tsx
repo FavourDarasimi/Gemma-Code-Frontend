@@ -7,6 +7,17 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { CodeIcon, Menu01Icon } from "@/lib/icons";
 import { Button } from "@/components/ui/Button";
 
+const sections = [
+  { id: "features", label: "Features" },
+  { id: "how-it-works", label: "How It Works" },
+  { id: "faq", label: "FAQ" },
+];
+
+function scrollTo(id: string) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: "smooth" });
+}
+
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -31,7 +42,7 @@ export function Nav() {
         }`}
 
       >
-        <div className="flex items-center justify-between w-full  mx-auto px-6">
+        <div className="flex items-center justify-between w-full mx-auto px-6">
           <Link href="/" className="flex items-center gap-2.5 shrink-0">
             <div className="flex items-center justify-center w-7 h-7 rounded-[6px] bg-accent text-white">
               <HugeiconsIcon icon={CodeIcon} size={16} />
@@ -44,13 +55,25 @@ export function Nav() {
             </span>
           </Link>
 
-          <div className="hidden md:flex items-center gap-3">
-            <Link href="/sign-in">
-              <Button variant="ghost">Sign in</Button>
-            </Link>
-            <Link href="/sign-up">
-              <Button variant="primary">Sign up</Button>
-            </Link>
+          <div className="hidden md:flex items-center gap-6">
+            {sections.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => scrollTo(s.id)}
+                className="text-sm leading-5 text-muted hover:text-ink transition-colors duration-100"
+                style={{ fontFamily: "var(--font-geist-sans)" }}
+              >
+                {s.label}
+              </button>
+            ))}
+            <div className="flex items-center gap-3 ml-2">
+              <Link href="/sign-in">
+                <Button variant="ghost">Sign in</Button>
+              </Link>
+              <Link href="/sign-up">
+                <Button variant="primary">Sign up</Button>
+              </Link>
+            </div>
           </div>
 
           <button
@@ -80,42 +103,66 @@ export function Nav() {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="fixed top-0 left-0 bottom-0 z-50 w-60 bg-surface border-r border-line shadow-[0_4px_16px_rgba(20,22,26,0.08)] flex flex-col"
+              className="fixed inset-0 z-50 bg-surface flex flex-col"
               role="dialog"
               aria-modal="true"
               aria-label="Navigation"
             >
-            <div className="flex items-center gap-2.5 px-4 py-3 border-b border-line shrink-0">
-              <div className="flex items-center justify-center w-7 h-7 rounded-[6px] bg-accent text-white shrink-0">
-                <HugeiconsIcon icon={CodeIcon} size={16} />
+              <div className="flex items-center justify-between px-4 py-3 border-b border-line shrink-0">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex items-center justify-center w-7 h-7 rounded-[6px] bg-accent text-white shrink-0">
+                    <HugeiconsIcon icon={CodeIcon} size={16} />
+                  </div>
+                  <span
+                    className="text-sm font-[600] leading-5 text-ink"
+                    style={{ fontFamily: "var(--font-geist-sans)" }}
+                  >
+                    GemmaCode
+                  </span>
+                </div>
+                <button
+                  onClick={() => setDrawerOpen(false)}
+                  aria-label="Close menu"
+                  className="flex items-center justify-center p-2 text-ink hover:bg-paper rounded-[6px] transition-colors duration-100"
+                >
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M 5,5 L 15,15 M 15,5 L 5,15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                </button>
               </div>
-              <span
-                className="text-sm font-[600] leading-5 text-ink"
-                style={{ fontFamily: "var(--font-geist-sans)" }}
-              >
-                GemmaCode
-              </span>
-            </div>
-            <div className="flex-1 p-3 space-y-2">
-              <Link
-                href="/sign-in"
-                onClick={() => setDrawerOpen(false)}
-                className="block px-3 py-2 rounded-[6px] text-sm text-muted hover:bg-paper hover:text-ink transition-colors duration-100"
-              >
-                Sign in
-              </Link>
-              <Link
-                href="/sign-up"
-                onClick={() => setDrawerOpen(false)}
-                className="block px-3 py-2 rounded-[6px] text-sm text-muted hover:bg-paper hover:text-ink transition-colors duration-100"
-              >
-                Sign up
-              </Link>
-            </div>
-          </motion.aside>
-        </>
-      )}
-    </AnimatePresence>
+              <div className="flex-1 p-4 space-y-1">
+                {sections.map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => { scrollTo(s.id); setDrawerOpen(false); }}
+                    className="block w-full text-left px-3 py-2.5 rounded-[6px] text-sm text-muted hover:bg-paper hover:text-ink transition-colors duration-100"
+                    style={{ fontFamily: "var(--font-geist-sans)" }}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+                <div className="border-t border-line my-4" />
+                <Link
+                  href="/sign-in"
+                  onClick={() => setDrawerOpen(false)}
+                  className="block px-3 py-2.5 rounded-[6px] text-sm text-muted hover:bg-paper hover:text-ink transition-colors duration-100"
+                  style={{ fontFamily: "var(--font-geist-sans)" }}
+                >
+                  Sign in
+                </Link>
+                <Link
+                  href="/sign-up"
+                  onClick={() => setDrawerOpen(false)}
+                  className="block px-3 py-2.5 rounded-[6px] text-sm text-muted hover:bg-paper hover:text-ink transition-colors duration-100"
+                  style={{ fontFamily: "var(--font-geist-sans)" }}
+                >
+                  Sign up
+                </Link>
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
     </>
   );
 }

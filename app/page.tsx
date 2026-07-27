@@ -24,10 +24,10 @@ export default function LandingPage() {
         <Nav />
         <main>
         <Hero />
-        <WhatCanItDo />
-        <HowItWorks />
+        <div id="features"><WhatCanItDo /></div>
+        <div id="how-it-works"><HowItWorks /></div>
         <EverythingItHelpsWith />
-        <Faq />
+        <div id="faq"><Faq /></div>
         <ProofSection />
           <CtaBand />
         </main>

@@ -32,48 +32,98 @@ function parseContent(content: string) {
   return parts;
 }
 
-export function MessageAssistant({ message, isStreaming }: MessageAssistantProps) {
-  const parts = useMemo(() => parseContent(message.content), [message.content]);
+function renderText(text: string) {
+  const lines = text.split("\n");
+  const elements: React.ReactNode[] = [];
+  let inList: "ul" | "ol" | null = null;
+  let listItems: React.ReactNode[] = [];
 
-  return (
-    <div className="flex-1 min-w-0">
-        <p
-          className="text-xs font-[500] text-muted leading-4 tracking-[0.04em] uppercase mb-2"
-          style={{ fontFamily: "var(--font-geist-mono)" }}
-        >
-          assistant
-        </p>
-        <div className="space-y-3">
-          {parts.map((part, i) => {
-            if (part.type === "code") {
-              return <CodeBlock key={i} language={part.language ?? "text"} code={part.content} />;
-            }
-            return (
-              <p
-                key={i}
-                className="text-[15px] leading-6 text-ink whitespace-pre-wrap break-words"
-                style={{ fontFamily: "var(--font-geist-sans)" }}
-              >
-                {renderInlineCode(part.content)}
-                {isStreaming && i === parts.length - 1 && (
-                  <StreamingCaret />
-                )}
-              </p>
-            );
-          })}
-          {parts.length === 0 && isStreaming && (
-            <span className="inline-block">
-              <StreamingCaret />
-            </span>
-          )}
-        </div>
-    </div>
-  );
+  function flushList() {
+    if (listItems.length > 0) {
+      const Tag = inList === "ol" ? "ol" : "ul";
+      elements.push(
+        <Tag key={`list-${elements.length}`} className="space-y-1 my-3">
+          {listItems}
+        </Tag>
+      );
+      listItems = [];
+      inList = null;
+    }
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+
+    // Empty line
+    if (!trimmed) {
+      flushList();
+      continue;
+    }
+
+    // Heading
+    const headingMatch = trimmed.match(/^(#{1,3})\s+(.+)$/);
+    if (headingMatch) {
+      flushList();
+      const level = headingMatch[1].length;
+      const content = renderInline(headingMatch[2]);
+      const Tag = level === 1 ? "h1" : level === 2 ? "h2" : "h3";
+      const size = level === 1 ? "text-[20px] leading-[28px] font-[600]" : level === 2 ? "text-[17px] leading-[24px] font-[600]" : "text-[15px] leading-[22px] font-[600]";
+      elements.push(
+        <Tag key={`h-${i}`} className={`${size} text-ink mt-6 mb-2 first:mt-0`} style={{ fontFamily: "var(--font-geist-sans)" }}>
+          {content}
+        </Tag>
+      );
+      continue;
+    }
+
+    // Unordered list
+    const ulMatch = trimmed.match(/^[-*]\s+(.+)$/);
+    if (ulMatch) {
+      if (inList !== "ul") {
+        flushList();
+        inList = "ul";
+      }
+      listItems.push(
+        <li key={`li-${i}`} className="text-[15px] leading-6 text-ink ml-5 list-disc" style={{ fontFamily: "var(--font-geist-sans)" }}>
+          {renderInline(ulMatch[1])}
+        </li>
+      );
+      continue;
+    }
+
+    // Ordered list
+    const olMatch = trimmed.match(/^\d+[.)]\s+(.+)$/);
+    if (olMatch) {
+      if (inList !== "ol") {
+        flushList();
+        inList = "ol";
+      }
+      listItems.push(
+        <li key={`li-${i}`} className="text-[15px] leading-6 text-ink ml-5 list-decimal" style={{ fontFamily: "var(--font-geist-sans)" }}>
+          {renderInline(olMatch[1])}
+        </li>
+      );
+      continue;
+    }
+
+    flushList();
+
+    // Regular paragraph
+    elements.push(
+      <p key={`p-${i}`} className="text-[15px] leading-6 text-ink my-2" style={{ fontFamily: "var(--font-geist-sans)" }}>
+        {renderInline(line)}
+      </p>
+    );
+  }
+
+  flushList();
+  return elements;
 }
 
-function renderInlineCode(text: string) {
+function renderInline(text: string) {
   const parts: React.ReactNode[] = [];
-  const regex = /`([^`]+)`/g;
+  const regex = /(\*\*(.+?)\*\*|`([^`]+)`)/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
@@ -81,19 +131,27 @@ function renderInlineCode(text: string) {
     if (match.index > lastIndex) {
       parts.push(text.slice(lastIndex, match.index));
     }
-    parts.push(
-      <code
-        key={match.index}
-        className="rounded-[4px] px-[6px] py-[2px] text-[13.5px]"
-        style={{
-          fontFamily: "var(--font-geist-mono)",
-          backgroundColor: "var(--color-code-bg)",
-          color: "var(--color-ink)",
-        }}
-      >
-        {match[1]}
-      </code>
-    );
+    if (match[1]?.startsWith("**")) {
+      parts.push(
+        <strong key={`b-${match.index}`} className="font-[600] text-ink">
+          {match[2]}
+        </strong>
+      );
+    } else if (match[3] !== undefined) {
+      parts.push(
+        <code
+          key={`c-${match.index}`}
+          className="rounded-[4px] px-[6px] py-[2px] text-[13.5px]"
+          style={{
+            fontFamily: "var(--font-geist-mono)",
+            backgroundColor: "var(--color-code-bg)",
+            color: "var(--color-ink)",
+          }}
+        >
+          {match[3]}
+        </code>
+      );
+    }
     lastIndex = match.index + match[0].length;
   }
 
@@ -102,6 +160,41 @@ function renderInlineCode(text: string) {
   }
 
   return parts.length > 0 ? parts : text;
+}
+
+export function MessageAssistant({ message, isStreaming }: MessageAssistantProps) {
+  const parts = useMemo(() => parseContent(message.content), [message.content]);
+
+  return (
+    <div className="flex-1 min-w-0">
+      <p
+        className="text-xs font-[500] text-muted leading-4 tracking-[0.04em] uppercase mb-2"
+        style={{ fontFamily: "var(--font-geist-mono)" }}
+      >
+        assistant
+      </p>
+      <div>
+        {parts.map((part, i) => {
+          if (part.type === "code") {
+            return <CodeBlock key={i} language={part.language ?? "text"} code={part.content} />;
+          }
+          return (
+            <div key={i} className="min-w-0">
+              {renderText(part.content)}
+              {isStreaming && i === parts.length - 1 && (
+                <StreamingCaret />
+              )}
+            </div>
+          );
+        })}
+        {parts.length === 0 && isStreaming && (
+          <span className="inline-block">
+            <StreamingCaret />
+          </span>
+        )}
+      </div>
+    </div>
+  );
 }
 
 function StreamingCaret() {

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Add01Icon } from "@/lib/icons";
 
 const faqs = [
   {
@@ -26,7 +28,7 @@ const faqs = [
   },
 ];
 
-function FaqItem({
+function FaqCard({
   question,
   answer,
   open,
@@ -43,31 +45,33 @@ function FaqItem({
 }) {
   return (
     <motion.div
-      initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
+      initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 10 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{
-        duration: prefersReducedMotion ? 0.001 : 0.15,
+        duration: prefersReducedMotion ? 0.001 : 0.2,
         ease: "easeOut",
-        delay: prefersReducedMotion ? 0 : index * 0.05,
+        delay: prefersReducedMotion ? 0 : index * 0.06,
       }}
-      className="border-b border-line last:border-b-0"
+      className={`rounded-[8px] border transition-all duration-200 ${
+        open
+          ? "border-accent bg-accent/[0.03] dark:bg-accent/[0.05]"
+          : "border-line bg-surface hover:border-muted/30"
+      }`}
     >
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between py-5 text-left transition-colors duration-100 hover:text-accent group"
+        className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left"
         aria-expanded={open}
       >
         <span
-          className="text-sm font-[500] leading-5 text-ink group-hover:text-accent transition-colors duration-100"
+          className="text-sm font-[500] leading-5 text-ink flex-1 min-w-0"
           style={{ fontFamily: "var(--font-geist-sans)" }}
         >
           {question}
         </span>
-        <span className={`shrink-0 ml-4 text-muted transition-transform duration-200 ${open ? "rotate-45" : ""}`}>
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M 8,2 L 8,14 M 2,8 L 14,8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
+        <span className={`shrink-0 text-muted transition-transform duration-200 ${open ? "rotate-45" : ""}`}>
+          <HugeiconsIcon icon={Add01Icon} size={18} />
         </span>
       </button>
       <AnimatePresence initial={false}>
@@ -80,7 +84,7 @@ function FaqItem({
             transition={{ duration: prefersReducedMotion ? 0.001 : 0.2, ease: "easeOut" }}
           >
             <p
-              className="text-sm leading-6 text-muted pb-5 -mt-2"
+              className="text-sm leading-6 text-muted px-5 pb-5 -mt-1"
               style={{ fontFamily: "var(--font-geist-sans)" }}
             >
               {answer}
@@ -107,16 +111,22 @@ export function Faq() {
             FAQ
           </p>
           <h2
-            className="text-[28px] leading-[36px] md:text-[36px] md:leading-[44px] font-[600] text-ink"
+            className="text-[28px] leading-[36px] md:text-[36px] md:leading-[44px] font-[600] text-ink mb-3"
             style={{ fontFamily: "var(--font-geist-sans)" }}
           >
-            Frequently asked questions
+            Got questions?
           </h2>
+          <p
+            className="text-sm leading-5 text-muted"
+            style={{ fontFamily: "var(--font-geist-sans)" }}
+          >
+            We&apos;ve got answers.
+          </p>
         </div>
 
-        <div className="border-t border-line">
+        <div className="flex flex-col gap-3">
           {faqs.map((faq, i) => (
-            <FaqItem
+            <FaqCard
               key={faq.q}
               question={faq.q}
               answer={faq.a}
