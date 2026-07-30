@@ -14,14 +14,25 @@ export default function ChatPage() {
   const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [checking, setChecking] = useState(true);
   const { send, state } = useChat();
 
   useEffect(() => {
-    const session = getSession();
-    if (!session) {
-      router.push("/sign-in");
-    }
+    getSession().then((session) => {
+      if (!session) {
+        router.push("/sign-in");
+      }
+      setChecking(false);
+    });
   }, [router]);
+
+  if (checking) {
+    return (
+      <div className="h-dvh flex items-center justify-center bg-surface">
+        <p className="text-muted text-sm">Loading\u2026</p>
+      </div>
+    );
+  }
 
   return (
     <div className="h-dvh flex overflow-hidden">

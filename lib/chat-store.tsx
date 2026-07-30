@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname, useRouter } from "next/navigation";
 import {
   createContext,
   useContext,
@@ -10,8 +11,9 @@ import {
   type ReactNode,
 } from "react";
 import type { Message, Conversation } from "./types";
-import { loadConversations, saveConversations, deleteConversation } from "./storage";
+import { loadConversations, saveConversations } from "./storage";
 import { sendMessage } from "./api";
+import { getAccessToken } from "./auth";
 
 interface ChatState {
   conversations: Conversation[];
@@ -29,7 +31,10 @@ type Action =
   | { type: "SET_ERROR"; error: string | null }
   | { type: "UPDATE_TITLE"; title: string }
   | { type: "DELETE_CONVERSATION"; id: string }
-  | { type: "NEW_CONVERSATION" };
+  | { type: "NEW_CONVERSATION" }
+  | { type: "SET_CONVERSATION_ID"; id: string }
+  | { type: "SET_MESSAGES"; conversationId: string; messages: Message[] }
+  | { type: "REMOVE_LAST_IF_EMPTY" };
 
 function reducer(state: ChatState, action: Action): ChatState {
   switch (action.type) {
@@ -43,6 +48,18 @@ function reducer(state: ChatState, action: Action): ChatState {
           ? { ...c, messages: [...c.messages, action.message], updatedAt: Date.now() }
           : c
       );
+      return { ...state, conversations };
+    }
+    case "REMOVE_LAST_IF_EMPTY": {
+      const conversations = state.conversations.map((c) => {
+        if (c.id !== state.currentId) return c;
+        const msgs = c.messages;
+        const last = msgs[msgs.length - 1];
+        if (last && last.role === "assistant" && !last.content) {
+          return { ...c, messages: msgs.slice(0, -1), updatedAt: Date.now() };
+        }
+        return c;
+      });
       return { ...state, conversations };
     }
     case "UPDATE_LAST_ASSISTANT": {
@@ -68,7 +85,8 @@ function reducer(state: ChatState, action: Action): ChatState {
       return { ...state, conversations };
     }
     case "DELETE_CONVERSATION": {
-      const conversations = deleteConversation(action.id);
+      const conversations = state.conversations.filter((c) => c.id !== action.id);
+      saveConversations(conversations);
       const currentId = state.currentId === action.id
         ? conversations[conversations.length - 1]?.id ?? null
         : state.currentId;
@@ -86,9 +104,28 @@ function reducer(state: ChatState, action: Action): ChatState {
         messages: [],
         createdAt: Date.now(),
         updatedAt: Date.now(),
+        saved: false,
       };
       const conversations = [conv, ...state.conversations];
       return { ...state, conversations, currentId: id, error: null };
+    }
+    case "SET_CONVERSATION_ID": {
+      const newId = action.id;
+      return {
+        ...state,
+        conversations: state.conversations.map((c) =>
+          c.id === state.currentId ? { ...c, id: newId, saved: true } : c
+        ),
+        currentId: newId,
+      };
+    }
+    case "SET_MESSAGES": {
+      const conversations = state.conversations.map((c) =>
+        c.id === action.conversationId
+          ? { ...c, messages: action.messages, updatedAt: Date.now() }
+          : c
+      );
+      return { ...state, conversations };
     }
     default:
       return state;
@@ -103,9 +140,35 @@ function createConversation(state: ChatState): string {
     messages: [],
     createdAt: Date.now(),
     updatedAt: Date.now(),
+    saved: false,
   };
   state.conversations.unshift(conv);
   return id;
+}
+
+function backendMessageToMessage(bm: any): Message {
+  return {
+    id: String(bm.id),
+    role: bm.role,
+    content: bm.content,
+    timestamp: Date.parse(bm.created_at),
+  };
+}
+
+function backendConversationToConversation(bc: any): Conversation {
+  return {
+    id: String(bc.id),
+    title: bc.title,
+    messages: (bc.messages || []).map(backendMessageToMessage),
+    createdAt: Date.parse(bc.created_at),
+    updatedAt: Date.parse(bc.updated_at),
+    saved: true,
+  };
+}
+
+function parseConversationIdFromPath(path: string): string | null {
+  const match = path.match(/^\/chat\/([a-f0-9-]+)$/i);
+  return match ? match[1] : null;
 }
 
 interface ChatContextValue {
@@ -128,10 +191,94 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   });
 
   const abortRef = useRef<AbortController | null>(null);
+  const pathname = usePathname();
+  const router = useRouter();
+  const pathnameRef = useRef(pathname);
+  pathnameRef.current = pathname;
+  const initializedRef = useRef(false);
 
-  useEffect(() => {
+  const init = useCallback(async () => {
+    const token = getAccessToken();
+    const currentPath = pathnameRef.current;
+
+    if (token) {
+      try {
+        const res = await fetch("/api/conversations/", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const backendConvs = data.map(backendConversationToConversation);
+
+          const urlId = parseConversationIdFromPath(currentPath);
+          let targetId: string | null = null;
+
+          if (urlId) {
+            const match = backendConvs.find((c: Conversation) => c.id === urlId);
+            if (match) targetId = urlId;
+          }
+
+          if (!targetId) {
+            if (backendConvs.length > 0) {
+              targetId = backendConvs[0].id;
+            } else {
+              const newConv: Conversation = {
+                id: crypto.randomUUID(),
+                title: "New chat",
+                messages: [],
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+                saved: false,
+              };
+              backendConvs.push(newConv);
+              targetId = newConv.id;
+            }
+          }
+
+          dispatch({ type: "SET_CONVERSATIONS", conversations: backendConvs });
+          dispatch({ type: "SET_CURRENT", id: targetId! });
+          saveConversations(backendConvs);
+
+          const targetPath = `/chat/${targetId}`;
+          if (currentPath !== targetPath) {
+            router.replace(targetPath);
+          }
+
+          // fetch messages for the selected saved conversation
+          const targetConv = backendConvs.find((c: Conversation) => c.id === targetId);
+          if (targetConv?.saved) {
+            try {
+              const msgRes = await fetch(`/api/conversations/${targetId}/`, {
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              if (msgRes.ok) {
+                const msgData = await msgRes.json();
+                const messages = (msgData.messages || []).map(backendMessageToMessage);
+                dispatch({ type: "SET_MESSAGES", conversationId: targetId!, messages });
+              }
+            } catch {}
+          }
+
+          initializedRef.current = true;
+          return;
+        }
+      } catch {}
+    }
+
     const stored = loadConversations();
-    if (stored.length === 0) {
+    const urlId = parseConversationIdFromPath(currentPath);
+    let targetId: string | null = null;
+
+    if (urlId) {
+      const match = stored.find((c) => c.id === urlId);
+      if (match) targetId = urlId;
+    }
+
+    if (!targetId && stored.length > 0) {
+      targetId = stored[0].id;
+    }
+
+    if (!targetId) {
       const id = crypto.randomUUID();
       const conv: Conversation = {
         id,
@@ -139,15 +286,45 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         messages: [],
         createdAt: Date.now(),
         updatedAt: Date.now(),
+        saved: false,
       };
       stored.push(conv);
       saveConversations(stored);
+      targetId = id;
     }
+
     dispatch({ type: "SET_CONVERSATIONS", conversations: stored });
-    if (!state.currentId && stored.length > 0) {
-      dispatch({ type: "SET_CURRENT", id: stored[0].id });
+    dispatch({ type: "SET_CURRENT", id: targetId! });
+
+    const targetPath = `/chat/${targetId}`;
+    if (currentPath !== targetPath) {
+      router.replace(targetPath);
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    initializedRef.current = true;
+  }, [router]);
+
+  useEffect(() => {
+    init();
+
+    const onAuthChange = () => {
+      init();
+    };
+
+    window.addEventListener("gemmacode-auth-change", onAuthChange);
+    return () => window.removeEventListener("gemmacode-auth-change", onAuthChange);
+  }, [init]);
+
+  useEffect(() => {
+    if (!initializedRef.current || !pathname.startsWith("/chat/")) return;
+    const urlId = parseConversationIdFromPath(pathname);
+    if (urlId && urlId !== state.currentId) {
+      const conv = state.conversations.find((c) => c.id === urlId);
+      if (conv) {
+        dispatch({ type: "SET_CURRENT", id: urlId });
+      }
+    }
+  }, [pathname, state.conversations, state.currentId]);
 
   useEffect(() => {
     if (state.conversations.length > 0) {
@@ -159,8 +336,24 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
   const send = useCallback(
     async (content: string) => {
-      if (state.isStreaming || !state.currentId) return;
+      if (state.isStreaming) return;
 
+      let currentId = state.currentId;
+      if (!currentId) {
+        currentId = crypto.randomUUID();
+        const conv: Conversation = {
+          id: currentId,
+          title: "New chat",
+          messages: [],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          saved: false,
+        };
+        dispatch({ type: "SET_CONVERSATIONS", conversations: [conv, ...state.conversations] });
+        dispatch({ type: "SET_CURRENT", id: currentId });
+      }
+
+      dispatch({ type: "REMOVE_LAST_IF_EMPTY" });
       dispatch({ type: "SET_ERROR", error: null });
 
       const userMsg: Message = {
@@ -180,42 +373,112 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       dispatch({ type: "ADD_MESSAGE", message: assistantMsg });
       dispatch({ type: "SET_STREAMING", isStreaming: true });
 
-      const conv = state.conversations.find((c) => c.id === state.currentId);
-      if (conv && conv.messages.length === 1) {
-        const short = content.length > 50 ? content.slice(0, 50) + "…" : content;
+      const conv = state.conversations.find((c) => c.id === currentId);
+      if (conv && conv.messages.length === 0) {
+        const short = content.length > 50 ? content.slice(0, 50) + "\u2026" : content;
         dispatch({ type: "UPDATE_TITLE", title: short });
       }
 
+      const generator = sendMessage(conv?.saved ? currentId : null, content);
       try {
-        const messages = [...(conv?.messages ?? []), userMsg];
         abortRef.current = new AbortController();
-        const generator = sendMessage(messages);
-        for await (const token of generator) {
+        for await (const event of generator) {
           if (abortRef.current?.signal.aborted) break;
-          dispatch({ type: "UPDATE_LAST_ASSISTANT", content: token });
+          if (event.conversation_id !== undefined) {
+            dispatch({ type: "SET_CONVERSATION_ID", id: event.conversation_id });
+            router.replace(`/chat/${event.conversation_id}`);
+            if (event.title !== undefined) {
+              dispatch({ type: "UPDATE_TITLE", title: event.title });
+            }
+          }
+          if (event.text !== undefined) {
+            dispatch({ type: "UPDATE_LAST_ASSISTANT", content: event.text });
+          }
+          if (event.error !== undefined) {
+            dispatch({ type: "SET_ERROR", error: event.error });
+            dispatch({ type: "REMOVE_LAST_IF_EMPTY" });
+          }
         }
       } catch (err) {
         const message = err instanceof Error ? err.message : "Something went wrong";
         dispatch({ type: "SET_ERROR", error: message });
+        dispatch({ type: "REMOVE_LAST_IF_EMPTY" });
       } finally {
         dispatch({ type: "SET_STREAMING", isStreaming: false });
         abortRef.current = null;
       }
     },
-    [state.isStreaming, state.currentId, state.conversations]
+    [state.isStreaming, state.currentId, state.conversations, router]
   );
 
-  const deleteConv = useCallback((id: string) => {
+  const deleteConv = useCallback(async (id: string) => {
+    const conv = state.conversations.find((c) => c.id === id);
+    if (conv?.saved) {
+      try {
+        const token = getAccessToken();
+        await fetch(`/api/conversations/${id}/`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } catch {}
+    }
     dispatch({ type: "DELETE_CONVERSATION", id });
-  }, []);
+  }, [state.conversations]);
 
-  const newChat = useCallback(() => {
+  const newChat = useCallback(async () => {
+    const token = getAccessToken();
+    if (token) {
+      try {
+        const res = await fetch("/api/conversations/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ title: "New chat" }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const conv = backendConversationToConversation(data);
+          dispatch({ type: "SET_CONVERSATIONS", conversations: [conv, ...state.conversations] });
+          dispatch({ type: "SET_CURRENT", id: conv.id });
+          router.push(`/chat/${conv.id}`);
+          return;
+        }
+      } catch {}
+    }
+
     dispatch({ type: "NEW_CONVERSATION" });
-  }, []);
+  }, [state.conversations, router]);
 
-  const selectConversation = useCallback((id: string) => {
-    dispatch({ type: "SET_CURRENT", id });
-  }, []);
+  const selectConversation = useCallback(
+    async (id: string) => {
+      const currentConv = state.conversations.find((c) => c.id === state.currentId);
+      if (currentConv && !currentConv.saved && currentConv.messages.length === 0 && currentConv.id !== id) {
+        dispatch({ type: "SET_CONVERSATIONS", conversations: state.conversations.filter(c => c.id !== currentConv.id) });
+      }
+
+      // fetch messages before switching to avoid blank flash
+      const conv = state.conversations.find((c) => c.id === id);
+      if (conv && conv.messages.length === 0 && conv.saved) {
+        try {
+          const token = getAccessToken();
+          const res = await fetch(`/api/conversations/${id}/`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const messages = (data.messages || []).map(backendMessageToMessage);
+            dispatch({ type: "SET_MESSAGES", conversationId: id, messages });
+          }
+        } catch {}
+      }
+
+      dispatch({ type: "SET_CURRENT", id });
+      router.replace(`/chat/${id}`);
+    },
+    [state.conversations, state.currentId, router]
+  );
 
   return (
     <ChatContext.Provider

@@ -167,12 +167,7 @@ export function MessageAssistant({ message, isStreaming }: MessageAssistantProps
 
   return (
     <div className="flex-1 min-w-0">
-      <p
-        className="text-xs font-[500] text-muted leading-4 tracking-[0.04em] uppercase mb-2"
-        style={{ fontFamily: "var(--font-geist-mono)" }}
-      >
-        assistant
-      </p>
+
       <div>
         {parts.map((part, i) => {
           if (part.type === "code") {
@@ -187,11 +182,7 @@ export function MessageAssistant({ message, isStreaming }: MessageAssistantProps
             </div>
           );
         })}
-        {parts.length === 0 && isStreaming && (
-          <span className="inline-block">
-            <StreamingCaret />
-          </span>
-        )}
+
       </div>
     </div>
   );

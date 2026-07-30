@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useChat } from "@/lib/chat-store";
-import { getSession, signOut } from "@/lib/auth";
+import { getAccessToken, getSession, signOut } from "@/lib/auth";
 import { Delete02Icon, CodeIcon, Logout01Icon } from "@/lib/icons";
+import { LogoutModal } from "./LogoutModal";
 
 interface MobileDrawerProps {
   open: boolean;
@@ -19,17 +20,24 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
   const drawerRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showLogout, setShowLogout] = useState(false);
+  const [email, setEmail] = useState("");
 
-  const session = getSession();
-  const email = session?.email ?? "";
+  useEffect(() => {
+    getSession().then((session) => {
+      if (session) setEmail(session.email);
+    });
+  }, []);
+
   const initials = email
     .split("@")[0]
     .slice(0, 2)
     .toUpperCase();
 
-  const handleSignOut = () => {
-    signOut();
+  const handleSignOut = async () => {
+    await signOut();
     setMenuOpen(false);
+    setShowLogout(false);
     onClose();
     router.push("/sign-in");
   };
@@ -152,18 +160,6 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
             </div>
 
             <div className="border-t border-line shrink-0">
-              <div className="p-3 border-b border-line">
-                <button
-                  onClick={() => {
-                    newChat();
-                    onClose();
-                  }}
-                  className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-[6px] text-sm font-[500] leading-5 border border-line text-ink hover:bg-paper transition-colors duration-100"
-                >
-                  New chat
-                </button>
-              </div>
-
               <div className="relative p-3" ref={menuRef}>
                 <button
                   onClick={() => setMenuOpen((v) => !v)}
@@ -180,7 +176,7 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
                 {menuOpen && (
                   <div className="absolute bottom-full left-3 right-3 mb-1 rounded-[6px] border border-line bg-surface shadow-[0_4px_16px_rgba(20,22,26,0.08)] overflow-hidden">
                     <button
-                      onClick={handleSignOut}
+                      onClick={() => setShowLogout(true)}
                       className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-ink hover:bg-paper transition-colors duration-100"
                     >
                       <HugeiconsIcon icon={Logout01Icon} size={16} className="text-muted" />
@@ -190,6 +186,12 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
                 )}
               </div>
             </div>
+
+            <LogoutModal
+              open={showLogout}
+              onClose={() => setShowLogout(false)}
+              onConfirm={handleSignOut}
+            />
           </motion.aside>
         </>
       )}

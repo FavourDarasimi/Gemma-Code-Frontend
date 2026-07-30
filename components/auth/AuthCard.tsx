@@ -44,8 +44,8 @@ export function AuthCard({ heading, children, footer, serverError }: AuthCardPro
 
         {serverError && (
           <div
-            className="mb-4 px-4 py-3 rounded-[6px] border border-danger text-sm leading-5"
-            style={{ backgroundColor: "#FBEEEC", fontFamily: "var(--font-geist-mono)" }}
+            className="mb-4 px-4 py-3 rounded-[6px] border border-danger/30 bg-danger/10 text-danger text-sm leading-5"
+            style={{ fontFamily: "var(--font-geist-mono)" }}
             role="alert"
           >
             {serverError}
