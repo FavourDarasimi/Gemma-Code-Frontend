@@ -1,17 +1,12 @@
-import { getAccessToken } from "./auth";
+import { authFetch } from "./auth";
 
 export async function* sendMessage(
   backendConversationId: string | null,
   message: string
 ): AsyncGenerator<{ conversation_id?: string; title?: string; text?: string; error?: string }, void, unknown> {
-  const token = getAccessToken();
-
-  const res = await fetch("/api/chat/", {
+  const res = await authFetch("/api/chat/", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       conversation_id: backendConversationId,
       message,

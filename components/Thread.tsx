@@ -28,7 +28,9 @@ export function Thread() {
   return (
     <div className="flex-1 min-h-0 overflow-y-auto">
       <div className="max-w-[720px] mx-auto px-4 md:px-6 pt-8 md:pt-12 pb-4">
-        {messages.length === 0 ? (
+        {state.messagesLoading ? (
+          <LoadingState />
+        ) : messages.length === 0 ? (
           <EmptyState onSuggestionClick={handleSuggestion} />
         ) : (
           <div className="space-y-6">
@@ -115,6 +117,27 @@ function StreamingIndicator() {
             animation: "gemmacode-blink 900ms linear infinite",
           }}
           aria-hidden="true"
+        />
+      </div>
+    </div>
+  );
+}
+
+function LoadingState() {
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center px-4 py-16">
+      <div className="flex items-center gap-2">
+        <span
+          className="inline-block w-1.5 h-1.5 rounded-full bg-accent"
+          style={{ animation: "gemmacode-blink 900ms linear infinite" }}
+        />
+        <span
+          className="inline-block w-1.5 h-1.5 rounded-full bg-accent"
+          style={{ animation: "gemmacode-blink 900ms linear infinite 300ms" }}
+        />
+        <span
+          className="inline-block w-1.5 h-1.5 rounded-full bg-accent"
+          style={{ animation: "gemmacode-blink 900ms linear infinite 600ms" }}
         />
       </div>
     </div>

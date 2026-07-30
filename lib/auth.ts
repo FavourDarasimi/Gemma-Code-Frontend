@@ -7,6 +7,8 @@ export interface Session {
 const ACCESS_KEY = "gemmacode-access";
 const REFRESH_KEY = "gemmacode-refresh";
 
+let refreshPromise: Promise<boolean> | null = null;
+
 export function getAccessToken(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem(ACCESS_KEY);
@@ -27,6 +29,41 @@ function clearTokens(): void {
   localStorage.removeItem(ACCESS_KEY);
   localStorage.removeItem(REFRESH_KEY);
   window.dispatchEvent(new Event("gemmacode-auth-change"));
+}
+
+export async function authFetch(
+  input: RequestInfo | URL,
+  init?: RequestInit
+): Promise<Response> {
+  const token = getAccessToken();
+  const headers = new Headers(init?.headers);
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  let res = await fetch(input, { ...init, headers });
+
+  if (res.status === 401 && token) {
+    if (!refreshPromise) {
+      refreshPromise = tryRefresh().finally(() => {
+        refreshPromise = null;
+      });
+    }
+    const refreshed = await refreshPromise;
+
+    if (refreshed) {
+      const newToken = getAccessToken();
+      const retryHeaders = new Headers(init?.headers);
+      if (newToken) {
+        retryHeaders.set("Authorization", `Bearer ${newToken}`);
+      }
+      res = await fetch(input, { ...init, headers: retryHeaders });
+    } else {
+      clearTokens();
+    }
+  }
+
+  return res;
 }
 
 export async function getSession(): Promise<Session | null> {

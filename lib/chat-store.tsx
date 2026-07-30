@@ -13,13 +13,14 @@ import {
 import type { Message, Conversation } from "./types";
 import { loadConversations, saveConversations } from "./storage";
 import { sendMessage } from "./api";
-import { getAccessToken } from "./auth";
+import { authFetch, getAccessToken } from "./auth";
 
 interface ChatState {
   conversations: Conversation[];
   currentId: string | null;
   isStreaming: boolean;
   error: string | null;
+  messagesLoading: boolean;
 }
 
 type Action =
@@ -34,7 +35,8 @@ type Action =
   | { type: "NEW_CONVERSATION" }
   | { type: "SET_CONVERSATION_ID"; id: string }
   | { type: "SET_MESSAGES"; conversationId: string; messages: Message[] }
-  | { type: "REMOVE_LAST_IF_EMPTY" };
+  | { type: "REMOVE_LAST_IF_EMPTY" }
+  | { type: "SET_MESSAGES_LOADING"; loading: boolean };
 
 function reducer(state: ChatState, action: Action): ChatState {
   switch (action.type) {
@@ -127,6 +129,8 @@ function reducer(state: ChatState, action: Action): ChatState {
       );
       return { ...state, conversations };
     }
+    case "SET_MESSAGES_LOADING":
+      return { ...state, messagesLoading: action.loading };
     default:
       return state;
   }
@@ -188,6 +192,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     currentId: null,
     isStreaming: false,
     error: null,
+    messagesLoading: false,
   });
 
   const abortRef = useRef<AbortController | null>(null);
@@ -203,9 +208,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
     if (token) {
       try {
-        const res = await fetch("/api/conversations/", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await authFetch("/api/conversations/");
         if (res.ok) {
           const data = await res.json();
           const backendConvs = data.map(backendConversationToConversation);
@@ -236,27 +239,30 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           }
 
           dispatch({ type: "SET_CONVERSATIONS", conversations: backendConvs });
-          dispatch({ type: "SET_CURRENT", id: targetId! });
           saveConversations(backendConvs);
+
+          const targetConv = backendConvs.find((c: Conversation) => c.id === targetId);
+          if (targetConv?.saved) {
+            dispatch({ type: "SET_MESSAGES_LOADING", loading: true });
+          }
+
+          dispatch({ type: "SET_CURRENT", id: targetId! });
 
           const targetPath = `/chat/${targetId}`;
           if (currentPath !== targetPath) {
             router.replace(targetPath);
           }
 
-          // fetch messages for the selected saved conversation
-          const targetConv = backendConvs.find((c: Conversation) => c.id === targetId);
           if (targetConv?.saved) {
             try {
-              const msgRes = await fetch(`/api/conversations/${targetId}/`, {
-                headers: { Authorization: `Bearer ${token}` },
-              });
+              const msgRes = await authFetch(`/api/conversations/${targetId}/`);
               if (msgRes.ok) {
                 const msgData = await msgRes.json();
                 const messages = (msgData.messages || []).map(backendMessageToMessage);
                 dispatch({ type: "SET_MESSAGES", conversationId: targetId!, messages });
               }
             } catch {}
+            dispatch({ type: "SET_MESSAGES_LOADING", loading: false });
           }
 
           initializedRef.current = true;
@@ -324,7 +330,16 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         dispatch({ type: "SET_CURRENT", id: urlId });
       }
     }
-  }, [pathname, state.conversations, state.currentId]);
+  }, [pathname]);
+
+  // sync currentId to URL
+  useEffect(() => {
+    if (!initializedRef.current || !state.currentId) return;
+    const targetPath = `/chat/${state.currentId}`;
+    if (pathname !== targetPath) {
+      router.replace(targetPath);
+    }
+  }, [state.currentId, pathname, router]);
 
   useEffect(() => {
     if (state.conversations.length > 0) {
@@ -386,7 +401,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           if (abortRef.current?.signal.aborted) break;
           if (event.conversation_id !== undefined) {
             dispatch({ type: "SET_CONVERSATION_ID", id: event.conversation_id });
-            router.replace(`/chat/${event.conversation_id}`);
             if (event.title !== undefined) {
               dispatch({ type: "UPDATE_TITLE", title: event.title });
             }
@@ -408,17 +422,15 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         abortRef.current = null;
       }
     },
-    [state.isStreaming, state.currentId, state.conversations, router]
+    [state.isStreaming, state.currentId, state.conversations]
   );
 
   const deleteConv = useCallback(async (id: string) => {
     const conv = state.conversations.find((c) => c.id === id);
     if (conv?.saved) {
       try {
-        const token = getAccessToken();
-        await fetch(`/api/conversations/${id}/`, {
+        await authFetch(`/api/conversations/${id}/`, {
           method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
         });
       } catch {}
     }
@@ -429,12 +441,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     const token = getAccessToken();
     if (token) {
       try {
-        const res = await fetch("/api/conversations/", {
+        const res = await authFetch("/api/conversations/", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ title: "New chat" }),
         });
         if (res.ok) {
@@ -461,23 +470,21 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       // fetch messages before switching to avoid blank flash
       const conv = state.conversations.find((c) => c.id === id);
       if (conv && conv.messages.length === 0 && conv.saved) {
+        dispatch({ type: "SET_MESSAGES_LOADING", loading: true });
         try {
-          const token = getAccessToken();
-          const res = await fetch(`/api/conversations/${id}/`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+          const res = await authFetch(`/api/conversations/${id}/`);
           if (res.ok) {
             const data = await res.json();
             const messages = (data.messages || []).map(backendMessageToMessage);
             dispatch({ type: "SET_MESSAGES", conversationId: id, messages });
           }
         } catch {}
+        dispatch({ type: "SET_MESSAGES_LOADING", loading: false });
       }
 
       dispatch({ type: "SET_CURRENT", id });
-      router.replace(`/chat/${id}`);
     },
-    [state.conversations, state.currentId, router]
+    [state.conversations, state.currentId]
   );
 
   return (
