@@ -20,7 +20,7 @@ export function AuthCard({ heading, children, footer, serverError }: AuthCardPro
         className="inline-flex items-center gap-2.5 mb-8"
         aria-label="GemmaCode home"
       >
-        <div className="flex items-center justify-center w-8 h-8 rounded-[6px] bg-accent text-white">
+        <div className="flex items-center justify-center w-8 h-8 rounded-[6px] bg-accent text-on-accent">
           <HugeiconsIcon icon={CodeIcon} size={18} />
         </div>
         <span

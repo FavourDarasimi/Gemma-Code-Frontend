@@ -14,11 +14,11 @@ const sizes = {
 };
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-[6px] font-[500] transition-all duration-150 cursor-pointer disabled:cursor-not-allowed select-none";
+  "inline-flex items-center justify-center gap-2 rounded-[6px] font-[500] transition-[background-color,border-color,color,transform] duration-150 ease-out cursor-pointer disabled:cursor-not-allowed select-none";
 
 const variants = {
   primary:
-    "bg-accent text-white hover:bg-accent-ink active:scale-[0.97] disabled:bg-line disabled:text-muted disabled:active:scale-100 disabled:pointer-events-none",
+    "bg-ink text-paper hover:bg-ink/80 active:scale-[0.97] disabled:bg-line disabled:text-muted disabled:active:scale-100 disabled:pointer-events-none",
   ghost:
     "bg-transparent border border-line text-ink hover:bg-paper active:scale-[0.97] disabled:text-muted disabled:active:scale-100 disabled:pointer-events-none",
 };

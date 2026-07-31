@@ -70,7 +70,7 @@ function renderText(text: string) {
       const Tag = level === 1 ? "h1" : level === 2 ? "h2" : "h3";
       const size = level === 1 ? "text-[20px] leading-[28px] font-[600]" : level === 2 ? "text-[17px] leading-[24px] font-[600]" : "text-[15px] leading-[22px] font-[600]";
       elements.push(
-        <Tag key={`h-${i}`} className={`${size} text-ink mt-6 mb-2 first:mt-0`} style={{ fontFamily: "var(--font-geist-sans)" }}>
+        <Tag key={`h-${i}`} className={`${size} text-ink mt-6 mb-2 first:mt-0 tracking-tight`}>
           {content}
         </Tag>
       );
@@ -85,7 +85,7 @@ function renderText(text: string) {
         inList = "ul";
       }
       listItems.push(
-        <li key={`li-${i}`} className="text-[15px] leading-6 text-ink ml-5 list-disc" style={{ fontFamily: "var(--font-geist-sans)" }}>
+        <li key={`li-${i}`} className="text-[15.5px] leading-6 text-ink ml-5 list-disc">
           {renderInline(ulMatch[1])}
         </li>
       );
@@ -100,7 +100,7 @@ function renderText(text: string) {
         inList = "ol";
       }
       listItems.push(
-        <li key={`li-${i}`} className="text-[15px] leading-6 text-ink ml-5 list-decimal" style={{ fontFamily: "var(--font-geist-sans)" }}>
+        <li key={`li-${i}`} className="text-[15.5px] leading-6 text-ink ml-5 list-decimal">
           {renderInline(olMatch[1])}
         </li>
       );
@@ -111,7 +111,7 @@ function renderText(text: string) {
 
     // Regular paragraph
     elements.push(
-      <p key={`p-${i}`} className="text-[15px] leading-6 text-ink my-2" style={{ fontFamily: "var(--font-geist-sans)" }}>
+      <p key={`p-${i}`} className="text-[15.5px] leading-6 text-ink my-2">
         {renderInline(line)}
       </p>
     );

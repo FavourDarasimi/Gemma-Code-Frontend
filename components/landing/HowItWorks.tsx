@@ -57,10 +57,10 @@ function StageCard({
         ease: "easeOut",
         delay: prefersReducedMotion ? 0 : index * 0.08,
       }}
-      className="rounded-[6px] border border-line bg-surface p-5 transition-all duration-200 hover:border-accent relative z-10 h-[104px] flex flex-col"
+      className="rounded-[6px] border border-line bg-surface p-5 transition-colors duration-150 ease-out hover:border-accent relative z-10 h-[104px] flex flex-col"
     >
       <div className="flex items-center gap-3 mb-2 shrink-0">
-        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-accent text-white shrink-0">
+        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-accent text-on-accent shrink-0">
           <HugeiconsIcon icon={icon} size={16} />
         </div>
         <h3

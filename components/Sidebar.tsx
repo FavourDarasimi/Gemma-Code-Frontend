@@ -57,7 +57,7 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
   if (collapsed) {
     return (
       <aside className="w-12 shrink-0 border-r border-line bg-surface flex flex-col items-center py-3 gap-4 h-full">
-        <div className="flex items-center justify-center w-8 h-8 rounded-[6px] bg-accent text-white">
+        <div className="flex items-center justify-center w-8 h-8 rounded-[6px] bg-accent text-on-accent">
           <HugeiconsIcon icon={CodeIcon} size={18} />
         </div>
         <button
@@ -75,13 +75,10 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
     <aside className="w-60 shrink-0 border-r border-line bg-surface flex flex-col h-full">
       <div className="flex items-center justify-between px-4 py-3 border-b border-line shrink-0">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="flex items-center justify-center w-7 h-7 rounded-[6px] bg-accent text-white shrink-0">
+          <div className="flex items-center justify-center w-7 h-7 rounded-[6px] bg-accent text-on-accent shrink-0">
             <HugeiconsIcon icon={CodeIcon} size={16} />
           </div>
-          <span
-            className="text-sm font-[600] leading-5 text-ink truncate"
-            style={{ fontFamily: "var(--font-geist-sans)" }}
-          >
+          <span className="text-sm font-[600] leading-5 text-ink truncate">
             GemmaCode
           </span>
         </div>
@@ -136,7 +133,7 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
           <span className="flex items-center justify-center w-7 h-7 rounded-full bg-line text-xs font-[600] text-ink shrink-0">
             {initials}
           </span>
-          <span className="truncate text-muted text-[13px]" style={{ fontFamily: "var(--font-geist-sans)" }}>
+          <span className="truncate text-muted text-[13px]">
             {email}
           </span>
         </button>

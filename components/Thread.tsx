@@ -78,10 +78,7 @@ export function Thread() {
               <div className="flex gap-3">
                 <div className="w-[2px] shrink-0 bg-danger rounded-none" />
                 <div className="flex-1 min-w-0">
-                  <p
-                    className="text-xs font-[500] text-danger leading-4 tracking-[0.04em] uppercase mb-2"
-                    style={{ fontFamily: "var(--font-geist-mono)" }}
-                  >
+                  <p className="t-label text-danger mb-2">
                     error
                   </p>
                   <p className="text-[15px] leading-6 text-danger">
@@ -104,10 +101,7 @@ function StreamingIndicator() {
     <div className="flex gap-3">
       <div className="w-[2px] shrink-0 bg-accent rounded-none" />
       <div className="flex-1 min-w-0">
-        <p
-          className="text-xs font-[500] text-muted leading-4 tracking-[0.04em] uppercase mb-2"
-          style={{ fontFamily: "var(--font-geist-mono)" }}
-        >
+        <p className="t-label text-muted mb-2">
           assistant
         </p>
         <span

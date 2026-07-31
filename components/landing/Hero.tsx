@@ -28,7 +28,7 @@ export function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: prefersReducedMotion ? 0.001 : 0.2, ease: "easeOut" }}
         >
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-line text-xs font-[500] text-muted mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-line t-label text-muted mb-6">
             <HugeiconsIcon icon={CodeIcon} size={16} />
             AI code assistant
           </div>
@@ -67,17 +67,6 @@ export function Hero() {
           className="max-w-[700px] mx-auto"
         >
           <div className="rounded-[24px] border border-line bg-surface overflow-hidden">
-            <div className="relative flex items-center justify-center py-2 border-b border-line">
-              <div className="w-[100px] h-[5px] rounded-full bg-line" />
-              <div className="absolute left-4">
-                <p
-                  className="text-[11px] font-[500] text-muted leading-4 tracking-[0.04em] uppercase"
-                  style={{ fontFamily: "var(--font-geist-mono)" }}
-                >
-                  gemmacode
-                </p>
-              </div>
-            </div>
             <div className="p-4 md:p-5 space-y-4 text-left">
               <MessageAssistant message={seededMessage} />
             </div>

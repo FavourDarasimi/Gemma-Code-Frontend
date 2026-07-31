@@ -32,10 +32,7 @@ export function Header({ onMenuClick, sidebarCollapsed, onToggleSidebar }: Heade
         >
           <HugeiconsIcon icon={PanelLeftCloseIcon} size={20} />
         </button>
-        <span
-          className="text-xs font-[500] text-muted leading-4 tracking-[0.04em] uppercase"
-          style={{ fontFamily: "var(--font-geist-mono)" }}
-        >
+        <span className="t-label text-muted">
           code-assistant-v1
         </span>
       </div>

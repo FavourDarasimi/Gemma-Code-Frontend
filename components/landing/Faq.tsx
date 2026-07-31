@@ -53,7 +53,7 @@ function FaqCard({
         ease: "easeOut",
         delay: prefersReducedMotion ? 0 : index * 0.06,
       }}
-      className={`rounded-[8px] border transition-all duration-200 ${
+      className={`rounded-[8px] border transition-colors duration-200 ${
         open
           ? "border-accent bg-accent/[0.03] dark:bg-accent/[0.05]"
           : "border-line bg-surface hover:border-muted/30"

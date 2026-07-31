@@ -77,7 +77,7 @@ export function WhatCanItDo() {
                 ease: "easeOut",
                 delay: prefersReducedMotion ? 0 : i * 0.05,
               }}
-              className="group rounded-[6px] border border-line bg-surface p-6 transition-all duration-300 hover:scale-105 hover:-translate-y-0.5"
+              className="group rounded-[6px] border border-line bg-surface p-6 hover:border-muted/40 transition-colors duration-150 ease-out"
             >
               <div className="flex items-center justify-center w-10 h-10 rounded-[6px]  text-ink mb-4">
                 <HugeiconsIcon icon={item.icon} size={20} />

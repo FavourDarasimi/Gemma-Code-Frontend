@@ -48,7 +48,7 @@ export function CtaBand() {
               </p>
               <Link
                 href="/sign-up"
-                className="group inline-flex items-center gap-2 rounded-[6px] bg-accent text-white px-7 py-3.5 text-[15px] font-[500] leading-5 transition-all duration-150 hover:bg-accent-ink active:scale-[0.97]"
+                className="group inline-flex items-center gap-2 rounded-[6px] bg-ink text-paper px-7 py-3.5 text-[15px] font-[500] leading-5 transition-[background-color,transform] duration-150 ease-out hover:bg-ink/80 active:scale-[0.97]"
               >
                 Start Building
                 <span className="transition-transform duration-150 group-hover:translate-x-0.5">

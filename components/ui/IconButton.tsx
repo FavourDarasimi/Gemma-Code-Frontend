@@ -11,7 +11,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
     return (
       <button
         ref={ref}
-        className={`inline-flex items-center justify-center rounded-[6px] p-2 text-ink hover:bg-paper transition-colors duration-100 cursor-pointer disabled:text-muted disabled:cursor-not-allowed ${className}`}
+        className={`inline-flex items-center justify-center rounded-[6px] p-2 text-ink hover:bg-paper transition-colors duration-100 ease-out cursor-pointer disabled:text-muted disabled:cursor-not-allowed disabled:pointer-events-none ${className}`}
         {...props}
       >
         {children}

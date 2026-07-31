@@ -15,10 +15,7 @@ export function EmptyState({ onSuggestionClick }: EmptyStateProps) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-4 py-16">
       <div className="max-w-lg text-center">
-        <p
-          className="text-xs font-[500] text-muted leading-4 tracking-[0.04em] uppercase mb-4"
-          style={{ fontFamily: "var(--font-geist-mono)" }}
-        >
+        <p className="t-label text-muted mb-4">
           {" > ready"}
         </p>
         <p className="text-base text-muted leading-6 mb-8">
@@ -29,7 +26,7 @@ export function EmptyState({ onSuggestionClick }: EmptyStateProps) {
             <button
               key={suggestion}
               onClick={() => onSuggestionClick(suggestion)}
-              className="px-4 py-2 rounded-[6px] text-sm text-ink border border-line bg-transparent hover:bg-paper transition-colors duration-100"
+              className="px-4 py-2 rounded-[6px] text-sm text-ink border border-line bg-transparent hover:bg-surface hover:border-muted/30 transition-colors duration-150 ease-out"
             >
               {suggestion}
             </button>

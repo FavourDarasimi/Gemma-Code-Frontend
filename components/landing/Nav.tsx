@@ -37,14 +37,14 @@ export function Nav() {
 
         }}
         transition={{ duration: prefersReducedMotion ? 0.001 : 0.15, ease: "easeOut" }}
-        className={`fixed border border-line max-w-[900px] mx-auto mt-3 px-3 rounded-full top-0 left-3 right-3 md:left-0 md:right-0 z-30 h-16 flex items-center -b transition-all duration-150 ${
+        className={`fixed border border-line max-w-[900px] mx-auto mt-3 px-3 rounded-full top-0 left-3 right-3 md:left-0 md:right-0 z-30 h-16 flex items-center transition-[background-color] duration-150 ${
           scrolled ? "backdrop-blur-xl" : ""
         }`}
 
       >
         <div className="flex items-center justify-between w-full mx-auto px-6">
           <Link href="/" className="flex items-center gap-2.5 shrink-0">
-            <div className="flex items-center justify-center w-7 h-7 rounded-[6px] bg-accent text-white">
+            <div className="flex items-center justify-center w-7 h-7 rounded-[6px] bg-accent text-on-accent">
               <HugeiconsIcon icon={CodeIcon} size={16} />
             </div>
             <span
@@ -110,7 +110,7 @@ export function Nav() {
             >
               <div className="flex items-center justify-between px-4 py-3 border-b border-line shrink-0">
                 <div className="flex items-center gap-2.5">
-                  <div className="flex items-center justify-center w-7 h-7 rounded-[6px] bg-accent text-white shrink-0">
+                  <div className="flex items-center justify-center w-7 h-7 rounded-[6px] bg-accent text-on-accent shrink-0">
                     <HugeiconsIcon icon={CodeIcon} size={16} />
                   </div>
                   <span

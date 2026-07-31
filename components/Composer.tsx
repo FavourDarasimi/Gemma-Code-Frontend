@@ -48,7 +48,7 @@ export function Composer({ onSend, disabled }: ComposerProps) {
   const canSend = value.trim().length > 0 && !disabled;
 
   const borderStyle = focused
-    ? { borderColor: "var(--color-accent)", boxShadow: "0 0 0 3px rgba(49, 93, 255, 0.12)" }
+    ? { borderColor: "var(--color-accent)", boxShadow: "0 0 0 3px color-mix(in oklab, var(--color-accent) 14%, transparent)" }
     : { borderColor: "var(--color-line)", boxShadow: "0 0 0 0 transparent" };
 
   return (
@@ -88,7 +88,7 @@ export function Composer({ onSend, disabled }: ComposerProps) {
               className="flex items-center justify-center w-9 h-9 rounded-[6px] transition-colors duration-100"
               style={{
                 backgroundColor: canSend ? "var(--color-accent)" : "var(--color-line)",
-                color: canSend ? "#fff" : "var(--color-muted)",
+                color: canSend ? "var(--color-on-accent)" : "var(--color-muted)",
                 pointerEvents: canSend ? "auto" : "none",
               }}
             >

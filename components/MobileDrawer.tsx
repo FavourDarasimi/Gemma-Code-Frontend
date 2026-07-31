@@ -100,7 +100,7 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-line shrink-0">
               <div className="flex items-center gap-2.5">
-                <div className="flex items-center justify-center w-7 h-7 rounded-[6px] bg-accent text-white shrink-0">
+                <div className="flex items-center justify-center w-7 h-7 rounded-[6px] bg-accent text-on-accent shrink-0">
                   <HugeiconsIcon icon={CodeIcon} size={16} />
                 </div>
                 <span

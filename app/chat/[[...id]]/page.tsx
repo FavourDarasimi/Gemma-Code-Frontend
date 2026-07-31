@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getSession } from "@/lib/auth";
+import { getAccessToken } from "@/lib/auth";
 import { useChat } from "@/lib/chat-store";
 import { Header } from "@/components/Header";
 import { Sidebar } from "@/components/Sidebar";
@@ -17,11 +17,9 @@ export default function ChatPage() {
   const { send, state } = useChat();
 
   useEffect(() => {
-    getSession().then((session) => {
-      if (!session) {
-        router.push("/sign-in");
-      }
-    });
+    if (!getAccessToken()) {
+      router.replace("/sign-in");
+    }
   }, [router]);
 
   return (

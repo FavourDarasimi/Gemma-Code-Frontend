@@ -48,7 +48,7 @@ export function EverythingItHelpsWith() {
             {[...items, ...items].map((item, i) => (
               <div
                 key={`${item}-${i}`}
-                className="flex items-center gap-2 rounded-[6px] border border-line bg-surface px-4 py-3 transition-all duration-200 hover:border-accent shrink-0"
+                className="flex items-center gap-2 rounded-[6px] border border-line bg-surface px-4 py-3 transition-colors duration-150 ease-out hover:border-accent shrink-0"
               >
                 <HugeiconsIcon icon={Tick01Icon} size={16} className="text-accent shrink-0" />
                 <span
