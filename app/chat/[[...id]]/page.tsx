@@ -38,7 +38,7 @@ export default function ChatPage() {
           onToggleSidebar={() => setSidebarCollapsed((v) => !v)}
         />
         <Thread />
-        <Composer onSend={send} disabled={state.isStreaming} />
+        <Composer onSend={send} disabled={state.isStreaming || state.isContinuing} />
       </div>
 
       <MobileDrawer

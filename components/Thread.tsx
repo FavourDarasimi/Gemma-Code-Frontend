@@ -8,7 +8,7 @@ import { MessageAssistant } from "./MessageAssistant";
 import { EmptyState } from "./EmptyState";
 
 export function Thread() {
-  const { currentConversation, send, state } = useChat();
+  const { currentConversation, send, continueReply, state } = useChat();
   const bottomRef = useRef<HTMLDivElement>(null);
   const prefersReducedMotion = useReducedMotion();
 
@@ -61,6 +61,40 @@ export function Thread() {
             ))}
 
             {state.isStreaming && messages[messages.length - 1]?.role === "assistant" && (
+              <motion.div
+                initial={
+                  prefersReducedMotion
+                    ? { opacity: 0 }
+                    : { opacity: 0, y: 8 }
+                }
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: prefersReducedMotion ? 0.001 : 0.15, ease: "easeOut" }}
+              >
+                <StreamingIndicator />
+              </motion.div>
+            )}
+
+            {state.pendingContinue && !state.isStreaming && !state.isContinuing && (
+              <motion.div
+                initial={
+                  prefersReducedMotion
+                    ? { opacity: 0 }
+                    : { opacity: 0, y: 8 }
+                }
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: prefersReducedMotion ? 0.001 : 0.15, ease: "easeOut" }}
+                className="flex justify-end"
+              >
+                <button
+                  onClick={() => continueReply()}
+                  className="inline-flex items-center gap-2 rounded-[6px] border border-ink/15 bg-surface px-3.5 py-2 text-[13.5px] font-medium text-ink transition-colors duration-100 ease-out hover:bg-ink/5"
+                >
+                  Continue response
+                </button>
+              </motion.div>
+            )}
+
+            {state.isContinuing && (
               <motion.div
                 initial={
                   prefersReducedMotion

@@ -12,13 +12,15 @@ import {
 } from "react";
 import type { Message, Conversation } from "./types";
 import { loadConversations, saveConversations } from "./storage";
-import { sendMessage } from "./api";
+import { sendMessage, continueMessage } from "./api";
 import { authFetch, getAccessToken } from "./auth";
 
 interface ChatState {
   conversations: Conversation[];
   currentId: string | null;
   isStreaming: boolean;
+  isContinuing: boolean;
+  pendingContinue: boolean;
   error: string | null;
   messagesLoading: boolean;
 }
@@ -36,14 +38,27 @@ type Action =
   | { type: "SET_CONVERSATION_ID"; id: string }
   | { type: "SET_MESSAGES"; conversationId: string; messages: Message[] }
   | { type: "REMOVE_LAST_IF_EMPTY" }
-  | { type: "SET_MESSAGES_LOADING"; loading: boolean };
+  | { type: "SET_MESSAGES_LOADING"; loading: boolean }
+  | { type: "SET_PENDING_CONTINUE"; pending: boolean }
+  | { type: "SET_CONTINUING"; continuing: boolean };
+
+function isIncompleteAssistant(messages: Message[]): boolean {
+  const last = messages[messages.length - 1];
+  return last?.role === "assistant" && last.complete === false;
+}
 
 function reducer(state: ChatState, action: Action): ChatState {
   switch (action.type) {
     case "SET_CONVERSATIONS":
       return { ...state, conversations: action.conversations };
-    case "SET_CURRENT":
-      return { ...state, currentId: action.id };
+    case "SET_CURRENT": {
+      const conv = state.conversations.find((c) => c.id === action.id);
+      return {
+        ...state,
+        currentId: action.id,
+        pendingContinue: conv ? isIncompleteAssistant(conv.messages) : false,
+      };
+    }
     case "ADD_MESSAGE": {
       const conversations = state.conversations.map((c) =>
         c.id === state.currentId
@@ -109,7 +124,14 @@ function reducer(state: ChatState, action: Action): ChatState {
         saved: false,
       };
       const conversations = [conv, ...state.conversations];
-      return { ...state, conversations, currentId: id, error: null };
+      return {
+        ...state,
+        conversations,
+        currentId: id,
+        error: null,
+        pendingContinue: false,
+        isContinuing: false,
+      };
     }
     case "SET_CONVERSATION_ID": {
       const newId = action.id;
@@ -127,10 +149,18 @@ function reducer(state: ChatState, action: Action): ChatState {
           ? { ...c, messages: action.messages, updatedAt: Date.now() }
           : c
       );
-      return { ...state, conversations };
+      return {
+        ...state,
+        conversations,
+        pendingContinue: isIncompleteAssistant(action.messages),
+      };
     }
     case "SET_MESSAGES_LOADING":
       return { ...state, messagesLoading: action.loading };
+    case "SET_PENDING_CONTINUE":
+      return { ...state, pendingContinue: action.pending };
+    case "SET_CONTINUING":
+      return { ...state, isContinuing: action.continuing };
     default:
       return state;
   }
@@ -156,6 +186,7 @@ function backendMessageToMessage(bm: any): Message {
     role: bm.role,
     content: bm.content,
     timestamp: Date.parse(bm.created_at),
+    complete: bm.complete ?? true,
   };
 }
 
@@ -179,6 +210,7 @@ interface ChatContextValue {
   state: ChatState;
   currentConversation: Conversation | undefined;
   send: (content: string) => Promise<void>;
+  continueReply: () => Promise<void>;
   deleteConv: (id: string) => void;
   newChat: () => void;
   selectConversation: (id: string) => void;
@@ -191,6 +223,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     conversations: [],
     currentId: null,
     isStreaming: false,
+    isContinuing: false,
+    pendingContinue: false,
     error: null,
     messagesLoading: false,
   });
@@ -370,6 +404,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
       dispatch({ type: "REMOVE_LAST_IF_EMPTY" });
       dispatch({ type: "SET_ERROR", error: null });
+      dispatch({ type: "SET_PENDING_CONTINUE", pending: false });
 
       const userMsg: Message = {
         id: crypto.randomUUID(),
@@ -412,6 +447,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             dispatch({ type: "SET_ERROR", error: event.error });
             dispatch({ type: "REMOVE_LAST_IF_EMPTY" });
           }
+          if (event.interrupted) {
+            dispatch({ type: "SET_PENDING_CONTINUE", pending: true });
+          }
         }
       } catch (err) {
         const message = err instanceof Error ? err.message : "Something went wrong";
@@ -424,6 +462,72 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     },
     [state.isStreaming, state.currentId, state.conversations]
   );
+
+  const continueReply = useCallback(async () => {
+    if (state.isStreaming || state.isContinuing) return;
+
+    const conv = state.conversations.find((c) => c.id === state.currentId);
+    if (!conv) return;
+
+    const last = conv.messages[conv.messages.length - 1];
+    if (!last || last.role !== "assistant" || last.complete !== false) return;
+
+    let backendId: string | null = conv.saved ? conv.id : null;
+    if (!backendId) {
+      try {
+        const res = await authFetch("/api/conversations/");
+        if (res.ok) {
+          const list: any[] = await res.json();
+          const firstUser = conv.messages.find((m) => m.role === "user")?.content ?? "";
+          const expectedTitle = firstUser.slice(0, 40).trimEnd() || "New conversation";
+          const match = list.find((c) => c.title === expectedTitle);
+          if (match) {
+            const detail = await authFetch(`/api/conversations/${match.id}/`);
+            if (detail.ok) {
+              const data = await detail.json();
+              const msgs: any[] = data.messages || [];
+              const candidate = msgs[msgs.length - 1];
+              if (candidate?.role === "assistant" && candidate.complete === false) {
+                backendId = String(match.id);
+                dispatch({ type: "SET_CONVERSATION_ID", id: backendId });
+              }
+            }
+          }
+        }
+      } catch {}
+    }
+
+    if (!backendId) {
+      dispatch({ type: "SET_ERROR", error: "Couldn't resume this response. Try sending the message again." });
+      return;
+    }
+
+    dispatch({ type: "SET_CONTINUING", continuing: true });
+    dispatch({ type: "SET_PENDING_CONTINUE", pending: false });
+    dispatch({ type: "SET_ERROR", error: null });
+
+    try {
+      const generator = continueMessage(backendId);
+      for await (const event of generator) {
+        if (event.text !== undefined) {
+          dispatch({ type: "UPDATE_LAST_ASSISTANT", content: event.text });
+        }
+        if (event.error !== undefined) {
+          dispatch({ type: "SET_ERROR", error: event.error });
+          dispatch({ type: "SET_PENDING_CONTINUE", pending: true });
+        }
+        if (event.interrupted) {
+          dispatch({ type: "SET_PENDING_CONTINUE", pending: true });
+        }
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Something went wrong";
+      dispatch({ type: "SET_ERROR", error: message });
+      dispatch({ type: "SET_PENDING_CONTINUE", pending: true });
+    } finally {
+      dispatch({ type: "SET_CONTINUING", continuing: false });
+    }
+  }, [state.isStreaming, state.isContinuing, state.currentId, state.conversations]);
 
   const deleteConv = useCallback(async (id: string) => {
     const conv = state.conversations.find((c) => c.id === id);
@@ -489,7 +593,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
   return (
     <ChatContext.Provider
-      value={{ state, currentConversation, send, deleteConv, newChat, selectConversation }}
+      value={{ state, currentConversation, send, continueReply, deleteConv, newChat, selectConversation }}
     >
       {children}
     </ChatContext.Provider>
